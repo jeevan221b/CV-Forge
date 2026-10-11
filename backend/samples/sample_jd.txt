@@ -1,0 +1,28 @@
+Backend Software Engineer
+Company: Northwind Freight Systems (fictional)
+Location: Remote (US)
+
+About the role
+We are a small platform team building the APIs that move freight data between carriers and shippers.
+You will design, build and operate backend services used by hundreds of customers.
+
+Responsibilities
+- Design and build REST APIs in Python for shipment tracking and billing
+- Own data pipelines that load carrier data into PostgreSQL
+- Improve reliability through automated testing and CI/CD
+- Collaborate with product managers and frontend engineers
+
+Requirements
+- 3+ years of professional software engineering experience
+- Strong proficiency in Python and SQL
+- Experience with PostgreSQL and designing relational schemas
+- Experience deploying containerized services with Docker on AWS
+- Bachelor's degree in Computer Science or equivalent experience
+
+Nice to have
+- Experience with Kubernetes and Terraform
+- Familiarity with Kafka or other event streaming platforms
+- Knowledge of Go
+
+Benefits
+- Health insurance and a home office stipend

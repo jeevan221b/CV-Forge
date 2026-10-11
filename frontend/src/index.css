@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+/*
+ * Dark theme.
+ *
+ * The components use Tailwind's neutral and status scales semantically (50 = faintest surface,
+ * 900 = strongest text). Rather than restyling every component, the scales are redefined here
+ * so that low numbers are dark surfaces and high numbers are light text. `white` is the card
+ * surface. When adding UI, keep using the scales the same way: bg-white / bg-slate-50 for
+ * surfaces, text-slate-900 for primary text, *-50 backgrounds with *-800 text for status tints.
+ */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --color-white: #131a24; /* card / input surface */
+  --color-stone-50: #0b0f15; /* page background */
+
+  --color-slate-50: #19212d;
+  --color-slate-100: #212b39;
+  --color-slate-200: #2b3646;
+  --color-slate-300: #3b4759;
+  --color-slate-400: #7d8899;
+  --color-slate-500: #9aa4b4;
+  --color-slate-600: #b5bdca;
+  --color-slate-700: #ccd3dd;
+  --color-slate-800: #dee3ea;
+  --color-slate-900: #eff2f6;
+  --color-slate-950: #f8fafc;
+
+  --color-accent-50: #14263a;
+  --color-accent-100: #1b3350;
+  --color-accent-200: #27476e;
+  --color-accent-500: #4f8fd6;
+  --color-accent-600: #7fb3ea;
+  --color-accent-700: #6aa6e6; /* primary buttons (with dark text) and active text */
+  --color-accent-900: #9cc6f2;
+
+  --color-emerald-50: #0f2a22;
+  --color-emerald-100: #143a2e;
+  --color-emerald-200: #1f5241;
+  --color-emerald-300: #2c6e57;
+  --color-emerald-500: #34d399;
+  --color-emerald-600: #34d399;
+  --color-emerald-700: #6ee7b7;
+  --color-emerald-800: #86efc4;
+  --color-emerald-900: #a7f3d0;
+
+  --color-amber-50: #2b2110;
+  --color-amber-200: #5a4416;
+  --color-amber-400: #fbbf24;
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #fbbf24;
+  --color-amber-700: #fcd34d;
+  --color-amber-800: #fcd98a;
+  --color-amber-900: #fde6a8;
+
+  --color-rose-50: #2d151b;
+  --color-rose-200: #5c2632;
+  --color-rose-300: #8a3a4b;
+  --color-rose-400: #fb7185;
+  --color-rose-600: #fb7185;
+  --color-rose-700: #fda4af;
+  --color-rose-800: #fdb4bd;
+  --color-rose-900: #fecdd3;
+  --color-rose-950: #ffe4e6;
+
+  --color-sky-50: #0f2533;
+  --color-sky-200: #1d4660;
+  --color-sky-400: #38bdf8;
+  --color-sky-500: #38bdf8;
+  --color-sky-800: #9ad8fb;
+  --color-sky-900: #bae6fd;
+}
+
+html {
+  color-scheme: dark;
+  background: var(--color-stone-50);
+}
+
+body {
+  @apply bg-stone-50 text-slate-800 antialiased;
+  font-feature-settings: "cv11", "ss01";
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent-500);
+  outline-offset: 2px;
+}
+
+.field {
+  @apply w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs
+    placeholder:text-slate-400 focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-100
+    disabled:bg-slate-50 disabled:text-slate-500;
+}
+
+.label {
+  @apply mb-1 block text-xs font-medium tracking-wide text-slate-600;
+}

@@ -1,0 +1,101 @@
+%-------------------------------------------------------------
+% FICTIONAL SAMPLE RESUME — every person, employer and number here is invented.
+% Used by the automated tests and as a demo document.
+%-------------------------------------------------------------
+\documentclass[letterpaper,11pt]{article}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tabularx}
+
+\titleformat{\section}{\scshape\raggedright\large}{}{0em}{}[\titlerule]
+
+\newcommand{\resumeItem}[1]{\item\small{#1 \vspace{-2pt}}}
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & #2 \\
+    \end{tabular*}\vspace{-7pt}
+}
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+\begin{document}
+
+\begin{center}
+    \textbf{\Huge \scshape Avery Quill} \\ \vspace{1pt}
+    \small 555-0142 $|$ \href{mailto:avery.quill@example.com}{\underline{avery.quill@example.com}} $|$
+    \href{https://linkedin.com/in/averyquill-sample}{\underline{linkedin.com/in/averyquill-sample}} $|$
+    \href{https://github.com/averyquill-sample}{\underline{github.com/averyquill-sample}} $|$ Portland, OR
+\end{center}
+
+\section{Summary}
+Backend-focused software engineer with experience building Python services and data pipelines
+for logistics products. Comfortable owning features from design through deployment. % trailing comment
+
+\section{Experience}
+  \resumeSubHeadingListStart
+
+    \resumeSubheading
+      {Software Engineer}{Mar 2022 -- Present}
+      {Lanternfish Logistics}{Portland, OR}
+      \resumeItemListStart
+        \resumeItem{Built a FastAPI service that validates shipment manifests, processing about 40,000 requests per day}
+        \resumeItem{Reduced nightly ETL runtime from 3 hours to 50 minutes by rewriting Pandas jobs as incremental PostgreSQL queries}
+        \resumeItem{Added pytest coverage and GitHub Actions checks to the manifest service \& cut regressions reported by QA}
+        \resumeItem{Worked with a team of 5 engineers to migrate 12 services to Docker containers on AWS ECS}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {Junior Developer}{Jul 2020 -- Feb 2022}
+      {Peregrine Analytics}{Remote}
+      \resumeItemListStart
+        \resumeItem{Developed internal dashboards in React and TypeScript used by 30\% of the support staff}
+        \resumeItem{Wrote SQL reports for the finance team and documented the reporting schema}
+        \resumeItem{Participated in code reviews and on-call rotation for the customer\_events pipeline}
+      \resumeItemListEnd
+
+  \resumeSubHeadingListEnd
+
+\section{Projects}
+    \resumeSubHeadingListStart
+      \resumeProjectHeading
+          {\textbf{Trailhead Tracker} $|$ \emph{Python, Flask, SQLite}}{2023}
+          \resumeItemListStart
+            \resumeItem{Built a hobby web app for logging hikes with GPX upload and elevation charts}
+            \resumeItem{Deployed on a single Linux VM with Nginx and automated backups using Bash scripts}
+          \resumeItemListEnd
+    \resumeSubHeadingListEnd
+
+\section{Education}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {Cascadia State University}{Corvallis, OR}
+      {Bachelor of Science in Computer Science}{Sep 2016 -- Jun 2020}
+  \resumeSubHeadingListEnd
+
+\section{Technical Skills}
+ \begin{itemize}[leftmargin=0.15in, label={}]
+    \small{\item{
+     \textbf{Languages}{: Python, SQL, TypeScript, JavaScript, Bash} \\
+     \textbf{Frameworks}{: FastAPI, Flask, React, Pandas} \\
+     \textbf{Tools}{: PostgreSQL, Docker, AWS, Git, GitHub Actions, pytest}
+    }}
+ \end{itemize}
+
+\section{Certifications}
+ \begin{itemize}
+   \item AWS Certified Cloud Practitioner, Amazon Web Services, 2023
+ \end{itemize}
+
+\end{document}
