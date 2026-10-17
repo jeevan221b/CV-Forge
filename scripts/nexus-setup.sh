@@ -9,6 +9,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 PORT="${CVFORGE_PORT:-8000}"
+# pydantic-core has no wheel for Termux, so pip builds it with Rust (pkg install rust;
+# slow on a phone, and only the first time). maturin needs the API level to target.
+if command -v getprop >/dev/null 2>&1; then
+  export ANDROID_API_LEVEL="${ANDROID_API_LEVEL:-$(getprop ro.build.version.sdk)}"
+fi
 
 echo "==> python deps"
 ( cd backend
