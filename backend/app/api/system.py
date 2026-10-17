@@ -1,6 +1,7 @@
 """Health, preflight and settings endpoints."""
 from __future__ import annotations
 
+import time
 from typing import Optional
 
 from fastapi import APIRouter, Request
@@ -24,8 +25,22 @@ PRIVACY_NOTICE = (
 
 
 @router.get("/health")
-def health() -> dict:
-    return {"status": "ok", "version": __version__}
+def health(request: Request) -> dict:
+    body: dict = {"status": "ok", "version": __version__}
+    minutes = settings_of(request).idle_shutdown_minutes
+    if minutes:
+        # For Mission Control's status panel: how long until this on-demand server stops itself.
+        idle = time.monotonic() - request.app.state.last_activity
+        body["idle_shutdown"] = {"after_minutes": minutes, "idle_seconds": round(idle),
+                                 "remaining_seconds": max(0, round(minutes * 60 - idle))}
+    return body
+
+
+@router.post("/keepalive")
+def keepalive() -> dict:
+    """Sent by the UI while someone is working, so an idle-shutdown server (CVFORGE_IDLE_SHUTDOWN_MINUTES)
+    does not stop under a long edit that makes no other request. The request itself is the signal."""
+    return {"ok": True}
 
 
 @router.get("/system")

@@ -46,6 +46,9 @@ class Settings:
 
     max_upload_bytes: int = 5 * 1024 * 1024
     compile_timeout_seconds: int = 300
+    # 0 keeps the server up forever. Otherwise it exits after this many minutes without API traffic
+    # (health checks excluded), for hosts where it is started on demand (see scripts/nexus-*.sh).
+    idle_shutdown_minutes: int = 0
 
     @property
     def ai_configured(self) -> bool:
@@ -98,4 +101,5 @@ def load_settings(env_file: Path | None = None) -> Settings:
         access_token=os.environ.get("CVFORGE_ACCESS_TOKEN", "").strip(),
         max_upload_bytes=max(1, _int("CVFORGE_MAX_UPLOAD_MB", 5)) * 1024 * 1024,
         compile_timeout_seconds=max(10, _int("CVFORGE_COMPILE_TIMEOUT_SECONDS", 300)),
+        idle_shutdown_minutes=max(0, _int("CVFORGE_IDLE_SHUTDOWN_MINUTES", 0)),
     )

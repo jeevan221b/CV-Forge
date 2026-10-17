@@ -66,6 +66,7 @@ Everything is set through environment variables or `backend/.env` (see `backend/
 | `CVFORGE_ACCESS_TOKEN` | empty | when set, every API call needs `Authorization: Bearer <token>` |
 | `CVFORGE_MAX_UPLOAD_MB` | 5 | upload limit |
 | `CVFORGE_COMPILE_TIMEOUT_SECONDS` | 300 | LaTeX compile timeout |
+| `CVFORGE_IDLE_SHUTDOWN_MINUTES` | 0 | exit after this many minutes without requests (0 = never); see Nexus below |
 
 ### Model choice
 
@@ -170,31 +171,39 @@ frontend/src/          React + TypeScript + Tailwind UI
 To use another AI provider, implement `AIProvider` (`ai/provider.py`) and pass it to
 `create_app`.
 
-## Running on Nexus (Termux) — not yet verified
+## Running on Nexus, on demand through Mission Control
 
-The app has no Docker dependency, no hardcoded paths, and configurable host, port and data
-directory, so nothing in the code ties it to a laptop. I have **not** run it on Termux, and
-could not confirm the following from documentation alone:
-
-- `pydantic-core` is a Rust extension. If no prebuilt wheel matches Termux's Python, pip has to
-  build it, which needs `pkg install rust` and is slow on a phone. Check first whether Termux
-  ships a packaged pydantic (`pkg search pydantic`).
-- LaTeX: check `pkg search tectonic` and `pkg search texlive`. A full TeX Live is large;
-  Tectonic is the lighter option if packaged.
-- `pkg search poppler` for `pdftotext`; without it the `pypdf` fallback is used.
-
-If those install, a private setup over Tailscale would be:
+On Nexus (the Termux phone) CV Forge is not kept running. It is a building in Mission Control's
+village (the blacksmith's forge): cold and dark while stopped, fire and sparks while running.
+"Open Dashboard" in Mission Control starts it, waits for it to answer, and opens it; after
+`CVFORGE_IDLE_SHUTDOWN_MINUTES` (30 on Nexus) without requests it exits by itself.
 
 ```bash
-# on Nexus, in backend/.env
-CVFORGE_HOST=<tailscale IP of Nexus>     # not 0.0.0.0
-CVFORGE_ACCESS_TOKEN=<long random string>
+# on Nexus, once
+git clone git@github.com:jeevan221b/CV-Forge.git ~/Projects/CV-Forge
+cd ~/Projects/CV-Forge && ./scripts/nexus-setup.sh   # deps, frontend build, backend/.env with a new token
+# then redeploy Mission Control so it picks up the token and port
 ```
 
-Build the frontend once (`npm run build`, on the laptop if Node is awkward on the phone, then
-copy `frontend/dist`), start `python -m app`, and open `http://<tailscale-ip>:8000` from a
-device on your tailnet. Enter the token when prompted. Binding to the Tailscale address keeps
-the app off Wi-Fi and mobile interfaces.
+| Script | What it does |
+|---|---|
+| `scripts/nexus-setup.sh` | install/update deps, build the UI, write `backend/.env` (only if missing) |
+| `scripts/nexus-start.sh` | start the `cv-forge` tmux session unless it is running (Mission Control calls this) |
+| `scripts/nexus-stop.sh` | kill the session (Mission Control's "Shut down now") |
+| `scripts/nexus-serve.sh` | the tmux entrypoint; log in `logs/cv-forge.log` |
+
+How the pieces fit:
+
+- **Idle shutdown.** Every request except `/api/health` counts as use, so Mission Control's
+  health polling does not keep it alive. The UI sends `POST /api/keepalive` every two minutes
+  while you are typing or clicking, so a long edit is not cut off; an untouched open tab sends
+  nothing. `/api/health` reports the remaining time, which Mission Control shows.
+- **Access.** It binds `0.0.0.0` with `CVFORGE_ACCESS_TOKEN` set. Mission Control's link carries
+  the token as `#token=…`; the UI stores it like a typed-in token and removes it from the address
+  bar (a URL fragment never reaches the server or its logs).
+- **No wake lock.** Termux has one app-wide wake lock and Mission Control holds it; CV Forge
+  never takes or releases it.
+- **Not in the boot/cron watchdogs on purpose**: it is on demand.
 
 ## Known limitations
 

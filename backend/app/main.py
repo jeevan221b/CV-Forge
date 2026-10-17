@@ -1,8 +1,13 @@
 """FastAPI application factory."""
 from __future__ import annotations
 
+import asyncio
 import hmac
 import logging
+import os
+import signal
+import time
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
 
@@ -25,11 +30,13 @@ FRONTEND_DIST = BACKEND_DIR.parent / "frontend" / "dist"
 def create_app(settings: Optional[Settings] = None, provider: Optional[AIProvider] = None) -> FastAPI:
     settings = settings or load_settings()
     app = FastAPI(title="CV Forge", version=__version__, docs_url="/api/docs", openapi_url="/api/openapi.json",
-                  redoc_url=None)
+                  redoc_url=None, lifespan=_idle_lifespan)
     app.state.settings = settings
     app.state.store = Store(settings)
     app.state.provider = provider or GroqProvider(settings)
     app.state.store.purge_expired()
+    app.state.last_activity = time.monotonic()
+    app.state.in_flight = 0
 
     if settings.allowed_origins:
         app.add_middleware(CORSMiddleware, allow_origins=list(settings.allowed_origins),
@@ -38,18 +45,27 @@ def create_app(settings: Optional[Settings] = None, provider: Optional[AIProvide
     @app.middleware("http")
     async def guard(request: Request, call_next):
         path = request.url.path
-        if (settings.access_token and path.startswith("/api/") and path != "/api/health"
-                and request.method != "OPTIONS"):
-            supplied = request.headers.get("authorization", "")
-            expected = f"Bearer {settings.access_token}"
-            if not hmac.compare_digest(supplied.encode(), expected.encode()):
-                return JSONResponse({"detail": {"code": "unauthorized", "message": "A valid access token is required."}},
-                                    status_code=401)
-        response = await call_next(request)
-        if path.startswith("/api/"):
-            response.headers["Cache-Control"] = "no-store"
-            response.headers["X-Content-Type-Options"] = "nosniff"
-        return response
+        # Everything but the health check counts as use. Mission Control polls /api/health, so it must not
+        # keep an idle on-demand server alive; a long request (a PDF compile) does.
+        counts = path != "/api/health"
+        if counts:
+            _touch(app, 1)
+        try:
+            if (settings.access_token and path.startswith("/api/") and path != "/api/health"
+                    and request.method != "OPTIONS"):
+                supplied = request.headers.get("authorization", "")
+                expected = f"Bearer {settings.access_token}"
+                if not hmac.compare_digest(supplied.encode(), expected.encode()):
+                    return JSONResponse({"detail": {"code": "unauthorized", "message": "A valid access token is required."}},
+                                        status_code=401)
+            response = await call_next(request)
+            if path.startswith("/api/"):
+                response.headers["Cache-Control"] = "no-store"
+                response.headers["X-Content-Type-Options"] = "nosniff"
+            return response
+        finally:
+            if counts:
+                _touch(app, -1)
 
     @app.exception_handler(AIError)
     async def ai_error(_request: Request, exc: AIError):
@@ -80,6 +96,32 @@ def create_app(settings: Optional[Settings] = None, provider: Optional[AIProvide
     if FRONTEND_DIST.is_dir():
         _mount_frontend(app, FRONTEND_DIST)
     return app
+
+
+def _touch(app: FastAPI, delta: int) -> None:
+    app.state.in_flight += delta
+    app.state.last_activity = time.monotonic()
+
+
+@asynccontextmanager
+async def _idle_lifespan(app: FastAPI):
+    minutes = app.state.settings.idle_shutdown_minutes
+    task = asyncio.create_task(_idle_watch(app, minutes * 60)) if minutes > 0 else None
+    if task:
+        log.info("idle shutdown enabled after %d min without requests", minutes)
+    yield
+    if task:
+        task.cancel()
+
+
+async def _idle_watch(app: FastAPI, limit: float) -> None:
+    while True:
+        await asyncio.sleep(min(30.0, limit / 4))
+        if app.state.in_flight == 0 and time.monotonic() - app.state.last_activity >= limit:
+            log.info("no requests for %d s, shutting down", int(limit))
+            # SIGTERM lets uvicorn finish its normal graceful shutdown.
+            os.kill(os.getpid(), signal.SIGTERM)
+            return
 
 
 def _mount_frontend(app: FastAPI, dist: Path) -> None:

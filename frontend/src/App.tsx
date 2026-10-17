@@ -1,7 +1,7 @@
 import { FileText, History, LayoutDashboard, Menu, PlusCircle, Settings as SettingsIcon, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { NavLink, Route, Routes, useLocation } from "react-router-dom";
-import { getToken, setToken, setUnauthorizedHandler } from "./api";
+import { api, getToken, setToken, setUnauthorizedHandler } from "./api";
 import { Alert, Button, Modal, cx } from "./components/ui";
 import Dashboard from "./pages/Dashboard";
 import HistoryPage from "./pages/History";
@@ -110,6 +110,7 @@ function Shell() {
   useEffect(() => {
     setUnauthorizedHandler(() => setNeedToken(true));
   }, []);
+  useKeepalive();
   useEffect(() => {
     // Block body on purpose: newer browsers return a Promise from scrollTo, which must not become the effect's cleanup.
     window.scrollTo(0, 0);
@@ -163,6 +164,30 @@ function Shell() {
       {needToken && <TokenPrompt onDone={() => setNeedToken(false)} />}
     </div>
   );
+}
+
+const KEEPALIVE_MS = 2 * 60 * 1000;
+
+/** While someone is typing or clicking, tell the backend so an idle-shutdown server stays up. An open but
+ * untouched tab sends nothing, so it does not keep the server running. */
+function useKeepalive() {
+  useEffect(() => {
+    let active = false;
+    const mark = () => {
+      active = true;
+    };
+    const events = ["pointerdown", "keydown", "wheel"] as const;
+    events.forEach((e) => window.addEventListener(e, mark, { passive: true }));
+    const timer = setInterval(() => {
+      if (!active) return;
+      active = false;
+      api.keepalive().catch(() => {});
+    }, KEEPALIVE_MS);
+    return () => {
+      clearInterval(timer);
+      events.forEach((e) => window.removeEventListener(e, mark));
+    };
+  }, []);
 }
 
 export default function App() {

@@ -42,3 +42,6 @@ npm-debug.log*
 .DS_Store
 .vscode/
 .idea/
+
+# Nexus runtime logs
+logs/

@@ -33,6 +33,15 @@ export const setToken = (value: string) => {
   }
 };
 
+/** Mission Control opens CV Forge with `#token=<access token>`; keep it like a typed-in token and drop it from
+ * the address bar. A fragment never reaches the server or its logs. */
+export const adoptTokenFromUrl = () => {
+  const match = /(?:^#|&)token=([^&]+)/.exec(window.location.hash);
+  if (!match) return;
+  setToken(decodeURIComponent(match[1]));
+  history.replaceState(history.state, "", window.location.pathname + window.location.search);
+};
+
 let onUnauthorized: (() => void) | null = null;
 export const setUnauthorizedHandler = (fn: () => void) => {
   onUnauthorized = fn;
@@ -75,6 +84,7 @@ export type DecisionBody = { action: "accept" | "reject" | "edit" | "reset"; tex
 
 export const api = {
   system: () => json<SystemInfo>("/system"),
+  keepalive: () => json<{ ok: boolean }>("/keepalive", "POST"),
   updateSettings: (body: { ai_consent?: boolean; retention_days?: number }) =>
     json<{ ai_consent: boolean; retention_days: number; purged_sessions: number }>("/settings", "PUT", body),
   purge: () => json<{ purged_sessions: number }>("/settings/purge", "POST"),
