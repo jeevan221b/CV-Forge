@@ -22,7 +22,9 @@ echo "==> python deps"
   .venv/bin/python -c "import fastapi, pydantic, pypdf; print('deps ok')" )
 
 echo "==> frontend build"
-( cd frontend && (npm ci --no-audit --no-fund -s || npm install --no-audit --no-fund -s) && npm run build -s )
+# `vite build` rather than `npm run build`: the latter type-checks first, and TypeScript 7's native
+# compiler ships no Android binary. Type-check on the laptop (npm run typecheck) instead.
+( cd frontend && (npm ci --no-audit --no-fund -s || npm install --no-audit --no-fund -s) && npx vite build )
 
 if [ ! -f backend/.env ]; then
   echo "==> writing backend/.env (new access token)"
